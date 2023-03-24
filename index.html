@@ -1,47 +1,60 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Oscilloscope</title>
-    <style>
-      #scope {
-        width: 500px;
-        height: 200px;
-        border: 1px solid black;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="scope"></canvas>
-    <script>
-      const canvas = document.querySelector('#scope');
-      const context = canvas.getContext('2d');
-      const width = canvas.width;
-      const height = canvas.height;
-      
-      // Define the frequency and amplitude of the waveform
-      const frequency = 10; // Hz
-      const amplitude = 0.5; // Volts
-      
-      function draw() {
-        // Clear the canvas
-        context.clearRect(0, 0, width, height);
-        
-        // Draw the waveform
-        context.beginPath();
-        for (let x = 0; x < width; x++) {
-          const t = x / width;
-          const y = height / 2 - amplitude * height / 2 * Math.sin(2 * Math.PI * frequency * t);
-          context.lineTo(x, y);
+<head>
+  <title>Oscilloscope Example</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <canvas id="oscilloscope" width="800" height="400"></canvas>
+  <script>
+    // create audio context and analyzer
+    const audioContext = new AudioContext();
+    const analyzer = audioContext.createAnalyser();
+
+    // connect audio source to analyzer
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const audioSource = audioContext.createMediaStreamSource(stream);
+        audioSource.connect(analyzer);
+      });
+
+    // set up canvas for visualizer
+    const canvas = document.getElementById('oscilloscope');
+    const canvasCtx = canvas.getContext('2d');
+    const bufferLength = analyzer.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    // draw waveform every 60ms
+    setInterval(() => {
+      analyzer.getByteTimeDomainData(dataArray);
+
+      canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      canvasCtx.lineWidth = 2;
+      canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+      canvasCtx.beginPath();
+
+      const sliceWidth = canvas.width * 1.0 / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+
+        if (i === 0) {
+          canvasCtx.moveTo(x, y);
+        } else {
+          canvasCtx.lineTo(x, y);
         }
-        context.stroke();
-        
-        // Request the next frame
-        requestAnimationFrame(draw);
+
+        x += sliceWidth;
       }
-      
-      // Start the animation
-      requestAnimationFrame(draw);
-    </script>
-  </body>
+
+      canvasCtx.lineTo(canvas.width, canvas.height / 2);
+      canvasCtx.stroke();
+    }, 60);
+  </script>
+</body>
 </html>
