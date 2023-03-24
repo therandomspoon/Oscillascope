@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Oscilloscope</title>
+    <style>
+      #scope {
+        width: 500px;
+        height: 200px;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scope"></canvas>
+    <script>
+      const canvas = document.querySelector('#scope');
+      const context = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      // Define the frequency and amplitude of the waveform
+      const frequency = 10; // Hz
+      const amplitude = 0.5; // Volts
+      
+      function draw() {
+        // Clear the canvas
+        context.clearRect(0, 0, width, height);
+        
+        // Draw the waveform
+        context.beginPath();
+        for (let x = 0; x < width; x++) {
+          const t = x / width;
+          const y = height / 2 - amplitude * height / 2 * Math.sin(2 * Math.PI * frequency * t);
+          context.lineTo(x, y);
+        }
+        context.stroke();
+        
+        // Request the next frame
+        requestAnimationFrame(draw);
+      }
+      
+      // Start the animation
+      requestAnimationFrame(draw);
+    </script>
+  </body>
+</html>
