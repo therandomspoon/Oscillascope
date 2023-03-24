@@ -1,60 +1,108 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Oscilloscope Example</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-  <canvas id="oscilloscope" width="800" height="400"></canvas>
-  <script>
-    // create audio context and analyzer
-    const audioContext = new AudioContext();
-    const analyzer = audioContext.createAnalyser();
+  <head>
+    <meta charset="UTF-8">
+    <title>Oscilloscope</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  </head>
+  <body>
+    <style>
+body {
+  background-color: grey;
+}
 
-    // connect audio source to analyzer
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const audioSource = audioContext.createMediaStreamSource(stream);
-        audioSource.connect(analyzer);
-      });
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin: 20px;
+}
 
-    // set up canvas for visualizer
-    const canvas = document.getElementById('oscilloscope');
-    const canvasCtx = canvas.getContext('2d');
-    const bufferLength = analyzer.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+.switch input {
+  display: none;
+}
 
-    // draw waveform every 60ms
-    setInterval(() => {
-      analyzer.getByteTimeDomainData(dataArray);
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
 
-      canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
 
-      canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+input:checked + .slider {
+  background-color: #2196F3;
+}
 
-      canvasCtx.beginPath();
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
 
-      const sliceWidth = canvas.width * 1.0 / bufferLength;
-      let x = 0;
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
 
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = v * canvas.height / 2;
+/* Dark mode styles */
+.dark-mode {
+  background-color: white;
+}
 
-        if (i === 0) {
-          canvasCtx.moveTo(x, y);
-        } else {
-          canvasCtx.lineTo(x, y);
-        }
+.dark-mode .slider {
+  background-color: #ddd;
+}
 
-        x += sliceWidth;
+.dark-mode input:checked + .slider {
+  background-color: #ccc;
+}
+
+.dark-mode input:checked + .slider:before {
+  background-color: #222;
+}
+    </style>
+    <script>
+      function setup() {
+        createCanvas(800, 400);
       }
 
-      canvasCtx.lineTo(canvas.width, canvas.height / 2);
-      canvasCtx.stroke();
-    }, 60);
-  </script>
-</body>
+      function draw() {
+        background(255);
+        strokeWeight(2);
+        for (let x = 0; x < width; x++) {
+          let y = sin(frameCount * 0.05 + x * 0.02) * 100 + height / 2;
+          point(x, y);
+        }
+      }
+
+      setInterval(function() {
+        redraw();
+      }, 16
+      toggleSwitch.addEventListener('change', toggleDarkMode);
+
+      function toggleDarkMode() {
+        if (toggleSwitch.checked) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }
+    </script>
+  </body>
 </html>
+
